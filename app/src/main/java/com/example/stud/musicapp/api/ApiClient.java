@@ -16,6 +16,10 @@ public interface ApiClient {
     @GET("track.php")
     Call<Tracks> getTrack(@Query("h") int trackId);
 
+    @GET("searchalbum.php")
+    Call<SearchAlbums> searchAlbums(@Query("s") String artist);
+
+
 
 
 

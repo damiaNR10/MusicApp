@@ -1,6 +1,7 @@
 package com.example.stud.musicapp.searchalbum;
 
 import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
@@ -8,8 +9,16 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.example.stud.musicapp.R;
+import com.example.stud.musicapp.api.ApiService;
+import com.example.stud.musicapp.api.SearchAlbum;
+import com.example.stud.musicapp.api.SearchAlbums;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class SearchAlbumActivity extends AppCompatActivity {
 
@@ -46,13 +55,50 @@ public class SearchAlbumActivity extends AppCompatActivity {
 
                 String query = etQuery.getText().toString();
                 rememberQuery(query);
+                searchAlbums(query);
 
             }
         });
 
     }
 
-    private void rememberQuery(String query)
+    private void searchAlbums(String query) {
+        getSupportActionBar().setSubtitle(query);
+
+        if (query == null || query.isEmpty()) {
+            Toast.makeText(this, "Pusta fraza", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Call<SearchAlbums> searchAlbumsCall = ApiService.getService().searchAlbums(query);
+        searchAlbumsCall.enqueue(new Callback<SearchAlbums>() {
+            @Override
+            public void onResponse(Call<SearchAlbums> call, Response<SearchAlbums> response) {
+                SearchAlbums searchAlbums = response.body();
+
+                if (searchAlbums == null || searchAlbums.album == null || searchAlbums.album.isEmpty()) {
+                    Toast.makeText(SearchAlbumActivity.this, "Brak wyników", Toast.LENGTH_SHORT).show();
+                    return;
+
+
+                }
+
+                Toast.makeText(SearchAlbumActivity.this, "Znaleziono " + searchAlbums.album.size() + " wyników", Toast.LENGTH_SHORT).show();
+
+
+            }
+
+            @Override
+            public void onFailure(Call<SearchAlbums> call, Throwable t) {
+                Toast.makeText(SearchAlbumActivity.this, "Błąd pobierania danych: " + t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+    }
+
+
+        private void rememberQuery(String query)
     {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString("query", query);
@@ -65,4 +111,6 @@ public class SearchAlbumActivity extends AppCompatActivity {
         onBackPressed();
         return true;
     }
+
+
 }
